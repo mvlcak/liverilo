@@ -1,0 +1,5 @@
+port 443
+www_path /var/www/liverilo/html
+ssl_path /etc/liverilo/ssl
+ssl_cert_name server.crt
+ssl_key_name server.key
