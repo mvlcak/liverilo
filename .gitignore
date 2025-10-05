@@ -1,3 +1,4 @@
 config/
 cmake-build-debug/
 .idea/
+build

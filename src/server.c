@@ -179,7 +179,7 @@ void send_404_response(const bool use_https,SSL* ssl, int datafd) {
 void* handle_client(void* arg) {
     client_data_t* data = (client_data_t*)arg;
 
-    SSL* ssl;
+    SSL* ssl = NULL;
     if (data->use_https) {
         // Create SSL connection
         ssl = SSL_new(data->ssl_ctx);
@@ -207,6 +207,7 @@ void* handle_client(void* arg) {
     char* path = NULL;
 
     if (r > 0) {
+        if (r >= REQ_BUFFER_SIZE) r = REQ_BUFFER_SIZE - 1;
         reqbuf[r] = '\0';
         path = extract_path_from_request(reqbuf);
     }
@@ -215,8 +216,12 @@ void* handle_client(void* arg) {
     unsigned char *source = NULL;
     size_t file_size = 0;
     enum FILE_TYPE ftype = OTHER;
-    // If path is "/" or not a static asset, serve index.html
-    if (path && (strcmp(path, "/") == 0 || !is_static_asset(path))) {
+    // Check for path traversal attempts
+    if (strstr(path, "..") || strstr(path, "//")) {
+        send_404_response(data->use_https, ssl, data->client_fd);
+        goto cleanup;
+    } else if(path && (strcmp(path, "/") == 0 || !is_static_asset(path))) {
+        // If path is "/" or not a static asset, serve index.html
         snprintf(full_path, sizeof(full_path),
             "%s/index.html", data->www_path);
         source = read_file_to_bytes(full_path, &file_size);
@@ -277,7 +282,7 @@ void* handle_client(void* arg) {
         free(method);
     }
 
-    if (data->use_https) {
+    if (data->use_https && ssl) {
         SSL_shutdown(ssl);
         SSL_free(ssl);
     }

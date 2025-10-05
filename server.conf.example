@@ -1,5 +1,7 @@
-port 443
+#config file should be located at /etc/liverilo/server.conf
+port 80
 www_path /var/www/liverilo/html
-ssl_path /etc/liverilo/ssl
-ssl_cert_name server.crt
-ssl_key_name server.key
+#ssl cert is optional, uncomment to enable
+#ssl_path /etc/liverilo/ssl
+#ssl_cert_name server.crt
+#ssl_key_name server.key
